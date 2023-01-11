@@ -1,0 +1,40 @@
+From ecaaf9ec70d3138609d2784b8cc25d3ef96c7db9 Mon Sep 17 00:00:00 2001
+From: Yash Goyal <ygoyal@wigwag.com>
+Date: Thu, 28 Jan 2021 19:38:51 -0800
+Subject: [PATCH] the recipe fails to find doxygen and breaks the build
+
+---
+ CMakeLists.txt | 20 --------------------
+ 1 file changed, 20 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2f266d4..3d3f022 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -87,23 +87,3 @@ if (NOT (CMAKE_BUILD_TYPE STREQUAL Release) AND (NOT (_FORTIFY_SOURCE GREATER 0)
+     SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+ endif ()
+ 
+-# Add doc target for building documentation with Doxygen
+-# add a target to generate API documentation with Doxygen
+-find_package (Doxygen)
+-option (BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
+-if (BUILD_DOCUMENTATION)
+-    if (NOT DOXYGEN_FOUND)
+-        message (FATAL_ERROR "Doxygen is needed to build the documentation.")
+-    endif ()
+-
+-    set (doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+-    set (doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+-    configure_file (${doxyfile_in} ${doxyfile} @ONLY)
+-
+-    add_custom_target (edge-doc
+-        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+-        COMMENT "Generating API documentation with Doxygen"
+-        VERBATIM)
+-endif ()
+-
+-- 
+2.17.1
+

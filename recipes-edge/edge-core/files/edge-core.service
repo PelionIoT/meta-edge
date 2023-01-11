@@ -1,0 +1,12 @@
+[Unit]
+Description=Edge Core
+After=network-online.target
+
+[Service]
+Restart=always
+RestartSec=5s
+ExecStartPre=mkdir -m700 -p /userdata/mbed
+ExecStart=/edge/mbed/edge-core  --http-port 9101
+
+[Install]
+WantedBy=multi-user.target

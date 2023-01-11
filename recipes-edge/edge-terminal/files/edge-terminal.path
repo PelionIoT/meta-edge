@@ -1,0 +1,9 @@
+[Unit]
+Description=Monitor the changes to identity.json file and restart edge-terminal
+
+[Path]
+PathChanged=EDGE_ETC/edge-terminal/config.json
+Unit=edge-terminal-watcher.service
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,32 @@
+From af5a526b949e2b0f9c6ccca3b5d0c81762ceec84 Mon Sep 17 00:00:00 2001
+From: Yash Goyal <ygoyal@wigwag.com>
+Date: Tue, 9 Mar 2021 17:46:24 -0800
+Subject: [PATCH] parsec-se-driver should be compiled separately in Yocto env
+
+parsec-se-driver is a Rust based project and Yocto do not like calling
+cargo from within cmake. Will add a separate recipe for parsec-se-driver
+and call that as DEPENDS in mbed-edge-core.
+---
+ lib/CMakeLists.txt | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/lib/CMakeLists.txt b/lib/CMakeLists.txt
+index 5a622e4..f289c16 100644
+--- a/lib/CMakeLists.txt
++++ b/lib/CMakeLists.txt
+@@ -53,12 +53,6 @@ if (PARSEC_TPM_SE_SUPPORT OR (FOTA_ENABLE AND NOT MBED_CLOUD_CLIENT_CURL_DYNAMIC
+ 
+   if (PARSEC_TPM_SE_SUPPORT)
+ 
+-    find_program(CARGO cargo)
+-    if (NOT CARGO)
+-      message(FATAL_ERROR "cargo not found!")
+-    endif ()
+-
+-    add_subdirectory("pal-platform/Middleware/parsec_se_driver")
+     add_subdirectory("pal-platform/Middleware/trusted_storage")
+ 
+   else ()
+-- 
+2.17.1
+

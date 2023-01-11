@@ -1,32 +1,8 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+*.swp
+*~
+scripts/config.txt
+scripts/interfaces
+scripts/wpa_supplicant.conf
+# Do not track the cert files by default to prevent chances of anyone slipping real certs here
+recipes-edge/edge-core/files/mbed_cloud_dev_credentials.c
+recipes-edge/edge-core/files/update_default_resources.c

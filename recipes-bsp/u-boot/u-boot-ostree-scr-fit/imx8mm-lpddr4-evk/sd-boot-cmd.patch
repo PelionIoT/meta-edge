@@ -1,0 +1,13 @@
+diff --git a/meta-lmp-support/recipes-bsp/u-boot/u-boot-ostree-scr-fit/imx8mm-lpddr4-evk/boot.cmd b/meta-lmp-support/recipes-bsp/u-boot/u-boot-ostree-scr-fit/imx8mm-lpddr4-evk/boot.cmd
+index 5432e14..29f6e87 100644
+--- a/boot.cmd
++++ b/boot.cmd
+@@ -3,7 +3,7 @@
+ # Default boot type and device
+ setenv bootlimit 3
+ setenv devtype mmc
+-setenv devnum 2
++setenv devnum 1
+ setenv bootpart 1
+ setenv rootpart 2
+ 

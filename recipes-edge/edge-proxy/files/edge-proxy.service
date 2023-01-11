@@ -1,0 +1,13 @@
+[Unit]
+Description=Tunneling Proxy for gateways
+Wants=wait-for-edge-identity.service
+After=wait-for-edge-identity.service
+
+[Service]
+Restart=always
+RestartSec=5
+ExecCondition=sh -c '[ -f /userdata/edge_gw_config/identity.json ]'
+ExecStart=/edge/system/bin/launch-edge-proxy.sh
+
+[Install]
+WantedBy=multi-user.target

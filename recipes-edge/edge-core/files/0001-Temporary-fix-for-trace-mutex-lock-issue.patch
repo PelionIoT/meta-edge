@@ -1,0 +1,38 @@
+From cd4690c12e868af9c7734054173569e9c4c58900 Mon Sep 17 00:00:00 2001
+From: Kimmo Vaisanen <kimmo.vaisanen@pelion.com>
+Date: Mon, 15 Nov 2021 13:06:47 +0200
+Subject: [PATCH] Temporary fix for trace mutex lock issue
+
+tr_array method is only allowed to be called from mbed trace functions (tr_info, tr_debug...).
+Otherwise it will leave trace mutex locked.
+
+This is a temporary workaround until this is properly fixed in mbed-client. This workaround
+assumes actual trace is done in INFO -level (code uses tr_info and client does not runtime change the level).
+---
+ mbed-client/mbed-client-c/source/sn_nsdl.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/lib/mbed-cloud-client/mbed-client/mbed-client-c/source/sn_nsdl.c b/lib/mbed-cloud-client/mbed-client/mbed-client-c/source/sn_nsdl.c
+index c9b5907..950edbc 100755
+--- a/lib/mbed-cloud-client/mbed-client/mbed-client-c/source/sn_nsdl.c
++++ b/lib/mbed-cloud-client/mbed-client/mbed-client-c/source/sn_nsdl.c
+@@ -2338,6 +2338,7 @@ bool sn_nsdl_remove_resource_attribute(sn_nsdl_static_resource_parameters_s *par
+
+ #endif
+
++#if MBED_TRACE_MAX_LEVEL >= TRACE_LEVEL_INFO
+ #define WRITE_TAG(buf, buf_size, format, ...) \
+ { \
+     int written = snprintf(buf, buf_size, format, ##__VA_ARGS__); \
+@@ -2347,6 +2348,9 @@ bool sn_nsdl_remove_resource_attribute(sn_nsdl_static_resource_parameters_s *par
+          ret += written; \
+     } \
+ }
++#else
++#define WRITE_TAG(buf, buf_size, format, ...) ;
++#endif
+
+ void sn_nsdl_print_coap_data(sn_coap_hdr_s *coap_header_ptr, bool outgoing)
+ {
+--
+2.25.1

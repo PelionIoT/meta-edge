@@ -1,0 +1,26 @@
+From ee84d9d9c2d1dd778d35fb0054fbdaaf9beb600c Mon Sep 17 00:00:00 2001
+From: Yash Goyal <ygoyal@wigwag.com>
+Date: Mon, 22 Feb 2021 12:29:35 -0800
+Subject: [PATCH] Set optimization level to 0 only if FORTIFY_SOURCE is set to
+ <=0
+
+---
+ cmake/examples_configure.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake/examples_configure.cmake b/cmake/examples_configure.cmake
+index 2b88151..0b29a3f 100644
+--- a/cmake/examples_configure.cmake
++++ b/cmake/examples_configure.cmake
+@@ -14,7 +14,7 @@ if (DEFINED EDGE_CLIENT_REQUEST_TIMEOUT_THRESHOLD_MS)
+ endif ()
+ SET (EDGE_CLIENT_REQUEST_TIMEOUT_THRESHOLD_MS 1800000) # Thirty minute
+ 
+-if (NOT (CMAKE_BUILD_TYPE STREQUAL Release))
++if (NOT (CMAKE_BUILD_TYPE STREQUAL Release) AND (NOT (_FORTIFY_SOURCE GREATER 0)))
+     SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+     SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+ endif ()
+-- 
+2.17.1
+
