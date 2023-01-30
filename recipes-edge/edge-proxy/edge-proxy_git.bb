@@ -26,7 +26,7 @@ edge-proxy-watcher.service \
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 
 SRCREV_FORMAT = "ep"
-SRCREV_ep = "d2e0fcdab1481487cab243c0ed3b4dc41febc49f"
+SRCREV_ep = "df50905bb0d35b74c81485c729adc8d9b9cb0516"
 GO_IMPORT = "github.com/PelionIoT/edge-proxy"
 
 RDEPENDS:${PN} = "jq bash"
