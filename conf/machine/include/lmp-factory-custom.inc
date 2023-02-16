@@ -36,10 +36,17 @@ kubelet \
 edge-proxy \
 "
 
+PARSEC_SERVICE = " \
+parsec-tool \
+parsec-service \
+"
+TOOLCHAIN:pn-parsec-service = "gcc"
+
 CORE_IMAGE_BASE_INSTALL:append = " \
 ${EDGE_BASE_REQUIRED} \
 ${EDGE_PROTOCOL_TRANSLATION} \
 ${EDGE_SYSTEMS_MANAGEMENT} \
 ${EDGE_CONTAINER_ORCHESTRATION} \
+${PARSEC_SERVICE} \
 "
 
