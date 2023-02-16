@@ -1,5 +1,5 @@
 [Unit]
-Description=Monitor the changes to identity.json file and restart relay-term
+Description=Monitor the changes to td-agent-bit.conf file and restart td-agent-bit
 
 [Path]
 PathChanged=/etc/td-agent-bit/td-agent-bit.conf
