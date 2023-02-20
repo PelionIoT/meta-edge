@@ -29,6 +29,7 @@ info-tool \
 testnet \
 edge-terminal \
 fluentbit \
+maestro \
 "
 
 EDGE_CONTAINER_ORCHESTRATION = " \
