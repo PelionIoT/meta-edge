@@ -1,0 +1,10 @@
+[Unit]
+Description=Maestro restarter
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl restart maestro.service
+
+[Install]
+WantedBy=multi-user.target
+
