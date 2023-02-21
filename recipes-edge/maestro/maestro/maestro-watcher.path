@@ -6,4 +6,4 @@ PathChanged=EDGE_DATA/edge_gw_config/identity.json
 Unit=maestro-watcher.service
 
 [Install]
-WantedBy=network.target
+WantedBy=multi-user.target

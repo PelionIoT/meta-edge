@@ -6,4 +6,5 @@ Type=oneshot
 ExecStart=/bin/systemctl restart maestro.service
 
 [Install]
-WantedBy=network.target
+WantedBy=multi-user.target
+
