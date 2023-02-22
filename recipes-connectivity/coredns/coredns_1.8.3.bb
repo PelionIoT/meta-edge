@@ -23,9 +23,12 @@ SRCREV:pn-coredns = "v1.8.3"
 
 PR = "r1"
 
-DEPENDS = "git "
+DEPENDS += "git"
 RDEPENDS:${PN} += "bash "
 
+#CGO_LDFLAGS += "--sysroot=${WORKDIR}/recipe-sysroot -pthread"
+CGO_CFLAGS += "-I${WORKDIR}/recipe-sysroot/usr/include"
+CGO_FLAGS += "${@' '.join( filter( lambda x: x.startswith(( '-mfpu=', '-mfloat-abi=', '-mcpu=' )), d.getVar('CC').split(' ') ) )}"
 
 FILES:${PN} =  " \
     ${EDGE_BIN}/coredns\
