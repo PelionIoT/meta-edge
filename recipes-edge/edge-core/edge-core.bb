@@ -102,6 +102,9 @@ INITSCRIPT_PARAMS = "defaults 85 15"
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = "edge-core.service"
 
+# Enable network access for downloading libcurl/parsec-se-driver etc sources.
+do_configure[network] = "1"
+
 do_configure:prepend() {
     cd ${S}
 
