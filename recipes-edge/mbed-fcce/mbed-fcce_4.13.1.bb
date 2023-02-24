@@ -7,15 +7,18 @@ MBED_EDGE_CORE_CONFIG_PARSEC_TPM_SE_SUPPORT ?= "OFF"
 MBED_EDGE_CMAKE_BUILD_TYPE ?= "Debug"
 
 DEPENDS = "python3-native python3-pip-native python3 python3-setuptools-native python3-setuptools-scm cmake-native mercurial-native python3-pyusb-native"
+DEPENDS += "python3-mbed-cli-native"
 DEPENDS += "${@ 'parsec-se-driver' if d.getVar('MBED_EDGE_CORE_CONFIG_PARSEC_TPM_SE_SUPPORT') == 'ON' else ' '}"
 
 RDEPENDS:${PN} += "bash python3 python3-core"
 
-inherit cmake pkgconfig gitpkgv setuptools3 python3native
+inherit cmake pkgconfig gitpkgv setuptools3 python3native edge
+
+SRCREV_FORMAT = "parsec_mbed-fcce"
 
 SRC_URI = " \
 git://github.com/parallaxsecond/parsec-se-driver.git;protocol=https;name=parsec;destsuffix=parsec-se-driver;branch=main \
-git://git@github.com/PelionIoT/factory-configurator-client-example.git;protocol=https;;branch=master \
+git://git@github.com/PelionIoT/factory-configurator-client-example.git;protocol=https;name=mbed-fcce;branch=master \
 file://0001-Added-trusted-storage-to-Yocto-target.patch \
 file://0001-fix-build-getting-cross-compiler-iface-setting-to-et.patch \
 file://0001-fix-arm_uc_pal_linux_extensions.manual_patch \
@@ -24,28 +27,17 @@ file://linux-se-config.cmake \
 file://0001-fix_psa_storage_location.patch \
 "
 
-SRCREV_factory-configurator-client-example = "${AUTOREV}"
-SRCREV_parsec = "0.5.0"
+SRCREV:pn-mbed-fcce = "${AUTOREV}"
+PV="${SRCREV:pn-mbed-fcce}+git${SRCPV}"
+
+SRCREV:parsec = "0.6.0"
 
 S = "${WORKDIR}/git"
-FILES:${PN} = "/edge/wwrelay-utils/I2C/*"
+FILES:${PN} = "${EDGE_BIN}/factory-configurator-client-armcompiled.elf"
 
 lcl_maybe_fortify = '-D_FORTIFY_SOURCE=0'
 
-do_configure() {
-
-    cd ${S}
-
-    export PYTHONPATH=$PYTHONPATH:`pwd`/recipe-sysroot-native/usr/lib/python3.8
-    export PATH=$PYTHONPATH:$PATH
-
-    export HTTP_PROXY=${HTTP_PROXY}
-    export HTTPS_PROXY=${HTTPS_PROXY}
-
-    pip3 install mbed-cli==1.10.5 click==7.1.2 requests pyopenssl==20.0.1
-
-}
-
+do_compile[network] = "1"
 do_compile() {
 
     cd ${S}
@@ -53,7 +45,11 @@ do_compile() {
     export HTTP_PROXY=${HTTP_PROXY}
     export HTTPS_PROXY=${HTTPS_PROXY}
 
-    mbedpath=$(which mbed);
+    mbedpath=$(which mbed-cli);
+    # Don't deploy Mbed OS, that's waste in Linux
+    if [ -f "mbed-os.lib" ]; then
+        rm "mbed-os.lib"
+    fi
     python3 $mbedpath deploy
 
     python3 pal-platform/pal-platform.py -v deploy --target=Yocto_Generic_YoctoLinux_mbedtls generate
@@ -93,8 +89,6 @@ do_compile() {
 
 do_install() {
 
-    install -d ${D}/edge
-    install -d ${D}/edge/wwrelay-utils
-    install -d ${D}/edge/wwrelay-utils/I2C
-    install -m 755 ${S}/__Yocto_Generic_YoctoLinux_mbedtls/Debug/factory-configurator-client-example.elf ${D}/edge/wwrelay-utils/I2C/factory-configurator-client-armcompiled.elf
+    install -d ${D}${EDGE_BIN}
+    install -m 755 ${S}/__Yocto_Generic_YoctoLinux_mbedtls/Debug/factory-configurator-client-example.elf ${D}${EDGE_BIN}/factory-configurator-client-armcompiled.elf
 }
