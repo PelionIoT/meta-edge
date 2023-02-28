@@ -42,6 +42,8 @@ parsec-tool \
 parsec-service \
 "
 TOOLCHAIN:pn-parsec-service = "gcc"
+# Add the parsec group to the ETC_GROUP_MEMBERS. This enables users to be added to the group at runtime, with either useradd or usermod
+ETC_GROUP_MEMBERS:append = " parsec"
 
 CORE_IMAGE_BASE_INSTALL:append = " \
 ${EDGE_BASE_REQUIRED} \
