@@ -5,13 +5,26 @@ on:
   workflow_dispatch:
     inputs: 
       target:
+        type: choice
         required: true
-        default: 'raspberrypi3-64'
-        options: 
-          - raspberrypi3-64
-          - raspberrypi4-64
-          - uz3eg-iocc
-          - imx8mmevk
+        description: "MACHINE=<target machine name>"
+        default: "raspberrypi3-64"
+        options:
+            - raspberrypi3-64
+            - raspberrypi4-64
+            - uz3eg-iocc
+            - imx8mmevk
+
+      image-type:
+        type: choice
+        required: true
+        description: "bitbake <build-type>"
+        default: "lmp-base-console-image"
+        options:
+            - lmp-mini-image
+            - lmp-base-console-image
+            - lmp-gateway-image
+
       branch-manifest:
         required: true
         default: 'main'
@@ -22,33 +35,45 @@ on:
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
-  group: meta-edge-${{ inputs.target || inputs.branch-manifest || inputs.meta-edge }}
+  group: meta-edge-${{ inputs.target || inputs.branch-manifest || inputs.meta-edge || inputs.image-type }}
   cancel-in-progress: true
 
 jobs:
   build-lmp:
     runs-on: [self-hosted, edge-builder]
     steps:
+      - name: Greetings
+        run: | 
+          echo "Greetings, build LmP for target is ${{ inputs.target }}" 
+          echo " with manifest branch: ${{ inputs.branch-manifest }}"
+          echo " with meta-edge branch: ${{ inputs.branch-meta-edge }}"
+          echo " ${{ inputs.image-type }} image."
       - name: Install dependencies
         run: |
-          apt update; sudo apt upgrade 
-          apt-get install -y coreutils curl gawk wget git diffstat unzip
-          apt-get install -y texinfo g++ gcc-multilib build-essential chrpath socat
-          apt-get install -y cpio openjdk-11-jre python3 python3-pip python3-venv
-          apt-get install -y python3-pexpect xz-utils debianutils iputils-ping
-          apt-get install -y libsdl1.2-dev xterm libssl-dev libelf-dev ca-certificates
-          apt-get install -y whiptail xxd libtinfo5
-          apt-get install libncurses5-dev
-          apt-get install -y liblz4-tool
-          mkdir ~/bin && PATH=~/bin:$PATH && curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo && chmod a+x ~/bin/repo
+          whoami
+          echo HOME=$HOME and USER=$USER
+          # These have been pre-installed to ed-dev2 machine.
+          #sudo apt update; sudo apt upgrade -y
+          #sudo apt-get install -y coreutils curl gawk wget git diffstat unzip
+          #sudo apt-get install -y texinfo g++ gcc-multilib build-essential chrpath socat
+          #sudo apt-get install -y cpio openjdk-11-jre python3 python3-pip python3-venv
+          #sudo apt-get install -y python3-pexpect xz-utils debianutils iputils-ping
+          #sudo apt-get install -y libsdl1.2-dev xterm libssl-dev libelf-dev ca-certificates
+          #sudo apt-get install -y whiptail xxd libtinfo5
+          #sudo apt-get install libncurses5-dev virtualenv
+          #sudo apt-get install -y liblz4-tool zstd
       - name: Init & sync manifest
         run: |
-          mkdir build
+          mkdir -p ~/bin && PATH=~/bin:$PATH && curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo && chmod a+x ~/bin/repo
+          mkdir -p build
           cd build
-          repo init -u https://github.com/PelionIoT/manifest-edge.git -b ${{ inputs.branch-manifest }}
-          repo sync
+          virtualenv ~/repo-venv
+          source ~/repo-venv/bin/activate
+          repo --version
+          repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b ${{ inputs.branch-manifest }}
+          repo sync -j"$(nproc)"
           cd layers/meta-edge
-          git checkout ${{ inputs.branch-meta-edge }} 
+          git checkout ${{ inputs.branch-meta-edge }}
       - name: Configure build
         run: |
           cd build
@@ -62,8 +87,8 @@ jobs:
           # MACHINE=<mach> source setup-environment -step
       - name: Get credentials
         env:
-          MBED_CLOUD_DEV_CREDENTIALS: ${{ secrets.MBED_CLOUD_DEV_CREDENTIALS_META_EDGE }}
-          UPDATE_DEFAULT_RESOURCES: ${{ secrets.UPDATE_DEFAULT_RESOURCESI }}
+          MBED_CLOUD_DEV_CREDENTIALS: ${{ secrets.META_EDGE_DEVELOPER_CERTIFICATE }}
+          UPDATE_DEFAULT_RESOURCES: ${{ secrets.UPDATE_DEFAULT_RESOURCE_C }}
           # US Prod, account: ARM-Edge-Gateway, accountID: 016aa245a97c6a01c5a5670000000000
           # Secrets in PelionIoT domain level.
         run: |
@@ -73,19 +98,15 @@ jobs:
         run: |
           cd build
           MACHINE=${{ inputs.target }} source setup-environment 
-          bitbake lmp-console-image
-      - name: Archive the wic-file
+          time bitbake ${{ inputs.image-type }}
+          # Move the image_license.manifest to image folder so that we can archive in 1 step
+          mv deploy/licenses/${{ inputs.image-type }}-${{ inputs.target }}/*.manifest deploy/images/${{ inputs.target }}/
+      - name: Archive the wic-file & license manifest
         uses: actions/upload-artifact@v3
         with:
           name: WIC-${{ inputs.target }}
           path: |
-             build/build-lmp/deploy/images/${{ inputs.target }}/lmp-base-console-image-${{ inputs.target }}.wic.bmap
-             build/build-lmp/deploy/images/${{ inputs.target }}/lmp-base-console-image-${{ inputs.target }}.wic.gz
-          if-no-files-found: error
-      - name: Archive the TPIP-file
-        uses: actions/upload-artifact@v3
-        with:
-          name: lmp-TPIP-${{ inputs.target }}
-          path: |
-             build-lmp/deploy/licenses/lmp-base-console-image-${{ inputs.target }}/image_license.manifest
+             build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.bmap
+             build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.gz
+             build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}/image_license.manifest
           if-no-files-found: error
