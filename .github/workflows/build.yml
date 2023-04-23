@@ -1,0 +1,91 @@
+# Build LmP builds
+name: build-LmP-builds
+
+on:
+  workflow_dispatch:
+    inputs: 
+      target:
+        required: true
+        default: 'raspberrypi3-64'
+        options: 
+          - raspberrypi3-64
+          - raspberrypi4-64
+          - uz3eg-iocc
+          - imx8mmevk
+      branch-manifest:
+        required: true
+        default: 'main'
+
+      branch-meta-edge:
+        required: true
+        default: 'main'
+
+# This allows a subsequently queued workflow run to interrupt previous runs
+concurrency:
+  group: meta-edge-${{ inputs.target || inputs.branch-manifest || inputs.meta-edge }}
+  cancel-in-progress: true
+
+jobs:
+  build-lmp:
+    runs-on: [self-hosted, edge-builder]
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update; sudo apt upgrade 
+          sudo apt-get install -y coreutils curl gawk wget git diffstat unzip
+          sudo apt-get install -y texinfo g++ gcc-multilib build-essential chrpath socat
+          sudo apt-get install -y cpio openjdk-11-jre python3 python3-pip python3-venv
+          sudo apt-get install -y python3-pexpect xz-utils debianutils iputils-ping
+          sudo apt-get install -y libsdl1.2-dev xterm libssl-dev libelf-dev ca-certificates
+          sudo apt-get install -y whiptail xxd libtinfo5
+          sudo apt-get install libncurses5-dev
+          sudo apt-get install -y liblz4-tool
+          mkdir ~/bin && PATH=~/bin:$PATH && curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo && chmod a+x ~/bin/repo
+      - name: Init & sync manifest
+        run: |
+          mkdir build
+          cd build
+          repo init -u https://github.com/PelionIoT/manifest-edge.git -b ${{ inputs.branch-manifest }}
+          repo sync
+          cd layers/meta-edge
+          git checkout ${{ inputs.branch-meta-edge }} 
+      - name: Configure build
+        run: |
+          cd build
+          echo -e "\n" >> .repo/manifests/conf/local.conf                                 
+          echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "ON"' >> .repo/manifests/conf/local.conf
+          echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> .repo/manifests/conf/local.conf
+          echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> .repo/manifests/conf/local.conf
+          #echo 'SSTATE_DIR = "/home/ubuntu/Projects/CACHE/SSTATE_CACHE"' >> .repo/manifests/conf/local.conf
+          #echo 'DL_DIR = "/home/ubuntu/Projects/CACHE/DL_DIR"' >> .repo/manifests/conf/local.conf
+          # Please note that this local.conf gets copied over to the build-lmp -folder after
+          # MACHINE=<mach> source setup-environment -step
+      - name: Get credentials
+        env:
+          MBED_CLOUD_DEV_CREDENTIALS: ${{ secrets.MBED_CLOUD_DEV_CREDENTIALS_META_EDGE }}
+          UPDATE_DEFAULT_RESOURCES: ${{ secrets.UPDATE_DEFAULT_RESOURCESI }}
+          # US Prod, account: ARM-Edge-Gateway, accountID: 016aa245a97c6a01c5a5670000000000
+          # Secrets in PelionIoT domain level.
+        run: |
+          echo "$MBED_CLOUD_DEV_CREDENTIALS" >build/layers/meta-edge/recipes-edge/edge-core/files/mbed_cloud_dev_credentials.c
+          echo "$UPDATE_DEFAULT_RESOURCES" >build/layers/meta-edge/recipes-edge/edge-core/files/update_default_resources.c
+      - name: Build
+        run: |
+          cd build
+          MACHINE=${{ inputs.target }} source setup-environment 
+          bitbake lmp-console-image
+      - name: Archive the wic-file
+        uses: actions/upload-artifact@v3
+        with:
+          name: WIC-${{ inputs.target }}
+          path: |
+             build/build-lmp/deploy/images/${{ inputs.target }}/lmp-base-console-image-${{ inputs.target }}.wic.bmap
+             build/build-lmp/deploy/images/${{ inputs.target }}/lmp-base-console-image-${{ inputs.target }}.wic.gz
+          if-no-files-found: error
+      - name: Archive the TPIP-file
+        uses: actions/upload-artifact@v3
+        with:
+          name: lmp-TPIP-${{ inputs.target }}
+          path: |
+             build-lmp/deploy/licenses/lmp-base-console-image-${{ inputs.target }}/image_license.manifest
+          if-no-files-found: error
