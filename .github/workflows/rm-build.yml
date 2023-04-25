@@ -1,0 +1,17 @@
+name: rm-build
+
+on:
+  - workflow_dispatch
+
+jobs:
+  wipe-build-folder:
+    runs-on: [self-hosted, edge-builder]
+    steps:
+      - name: Greetings
+        run: |
+          echo "Greetings, will remove build -folder."
+          ls -al build
+      - name: Remove build -folder
+        run: rm -rf build
+      - name: Done
+        run: echo "build -folder has been removed. Next lmp-build will take longer as caches have now been lost."
