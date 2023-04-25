@@ -10,8 +10,12 @@ jobs:
       - name: Greetings
         run: |
           echo "Greetings, will remove build -folder."
+          pwd
           ls -al build
+          df -h .
       - name: Remove build -folder
         run: rm -rf build
       - name: Done
-        run: echo "build -folder has been removed. Next lmp-build will take longer as caches have now been lost."
+        run: |
+          df -h .
+          echo "build -folder has been removed. Next lmp-build will take longer as caches have now been lost."
