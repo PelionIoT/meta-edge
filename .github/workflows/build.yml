@@ -14,7 +14,7 @@ on:
             - raspberrypi4-64
             - uz3eg-iocc
             - imx8mmevk
-
+            - intel-corei7-64
       image-type:
         type: choice
         required: true
@@ -77,13 +77,14 @@ jobs:
       - name: Configure build
         run: |
           cd build
-          echo -e "\n" >> .repo/manifests/conf/local.conf                                 
-          echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "ON"' >> .repo/manifests/conf/local.conf
-          echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> .repo/manifests/conf/local.conf
-          echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> .repo/manifests/conf/local.conf
-          #echo 'SSTATE_DIR = "/home/ubuntu/Projects/CACHE/SSTATE_CACHE"' >> .repo/manifests/conf/local.conf
-          #echo 'DL_DIR = "/home/ubuntu/Projects/CACHE/DL_DIR"' >> .repo/manifests/conf/local.conf
-          # Please note that this local.conf gets copied over to the build-lmp -folder after
+          export LOCALCONF=".repo/manifests/conf/local.conf"
+          echo -e "\n" >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> "$LOCALCONF"
+          #echo 'SSTATE_DIR = "/home/ubuntu/Projects/CACHE/SSTATE_CACHE"' >> "$LOCALCONF"
+          #echo 'DL_DIR = "/home/ubuntu/Projects/CACHE/DL_DIR"' >> "$LOCALCONF"
+          # Please note that this local.conf gets copied over to the build-lm/conf -folder after
           # MACHINE=<mach> source setup-environment -step
       - name: Get credentials
         env:
@@ -94,7 +95,7 @@ jobs:
         run: |
           echo "$MBED_CLOUD_DEV_CREDENTIALS" >build/layers/meta-edge/recipes-edge/edge-core/files/mbed_cloud_dev_credentials.c
           echo "$UPDATE_DEFAULT_RESOURCES" >build/layers/meta-edge/recipes-edge/edge-core/files/update_default_resources.c
-      - name: Build
+      - name: Build-dev
         run: |
           cd build
           MACHINE=${{ inputs.target }} source setup-environment 
