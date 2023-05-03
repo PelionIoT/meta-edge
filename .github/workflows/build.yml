@@ -73,8 +73,9 @@ jobs:
           repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b ${{ inputs.branch-manifest }}
           repo sync -j"$(nproc)"
           cd layers/meta-edge
+          git fetch
           git checkout ${{ inputs.branch-meta-edge }}
-      - name: Configure build
+      - name: Configure dev cert build
         run: |
           cd build
           export LOCALCONF=".repo/manifests/conf/local.conf"
@@ -84,9 +85,9 @@ jobs:
           echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> "$LOCALCONF"
           #echo 'SSTATE_DIR = "/home/ubuntu/Projects/CACHE/SSTATE_CACHE"' >> "$LOCALCONF"
           #echo 'DL_DIR = "/home/ubuntu/Projects/CACHE/DL_DIR"' >> "$LOCALCONF"
-          # Please note that this local.conf gets copied over to the build-lm/conf -folder after
+          # Please note that this local.conf gets copied over to the build-lmp/conf -folder after
           # MACHINE=<mach> source setup-environment -step
-      - name: Get credentials
+      - name: Get dev credentials
         env:
           MBED_CLOUD_DEV_CREDENTIALS: ${{ secrets.META_EDGE_DEVELOPER_CERTIFICATE }}
           UPDATE_DEFAULT_RESOURCES: ${{ secrets.UPDATE_DEFAULT_RESOURCE_C }}
@@ -95,17 +96,48 @@ jobs:
         run: |
           echo "$MBED_CLOUD_DEV_CREDENTIALS" >build/layers/meta-edge/recipes-edge/edge-core/files/mbed_cloud_dev_credentials.c
           echo "$UPDATE_DEFAULT_RESOURCES" >build/layers/meta-edge/recipes-edge/edge-core/files/update_default_resources.c
-      - name: Build-dev
+      - name: Build-dev ${{ inputs.target }}
         run: |
           cd build
           MACHINE=${{ inputs.target }} source setup-environment 
+          tail -n 6 conf/local.conf
           time bitbake ${{ inputs.image-type }}
           # Move the image_license.manifest to image folder so that we can archive in 1 step
           mv deploy/licenses/${{ inputs.image-type }}-${{ inputs.target }}/*.manifest deploy/images/${{ inputs.target }}/
-      - name: Archive the wic-file & license manifest
+      - name: Archive the developer cert wic-file & license manifest for ${{ inputs.target }}
         uses: actions/upload-artifact@v3
         with:
-          name: WIC-${{ inputs.target }}
+          name: WIC-dev-US-PROD-Account-016aa245a97c6a01c5a5670000000000-${{ inputs.target }}
+          path: |
+             build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.bmap
+             build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.gz
+             build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}/image_license.manifest
+          if-no-files-found: error
+      - name: Build-BYOC ${{ inputs.target }}
+        run: |
+          cd build
+          cd .repo/manifests/
+          # Reset local.conf back to default
+          git checkout conf/local.conf
+          cd ../..
+          # Inject BYOC config
+          export LOCALCONF=".repo/manifests/conf/local.conf"
+          echo -e "\n" >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_BYOC_MODE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "OFF"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> "$LOCALCONF"
+          # Put in the right place the BYOC config (build-lmp -folder)
+          cp "$LOCALCONF" build-lmp/conf/local.conf
+          MACHINE=${{ inputs.target }} source setup-environment
+          tail -n 6 conf/local.conf
+          time bitbake ${{ inputs.image-type }}
+          # Move the image_license.manifest to image folder so that we can archive in 1 step
+          mv deploy/licenses/${{ inputs.image-type }}-${{ inputs.target }}/*.manifest deploy/images/${{ inputs.target }}/
+      - name: Archive the BYOC WIC-file & license manifest for ${{ inputs.target }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: WIC-BYOC-${{ inputs.target }}
           path: |
              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.bmap
              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.gz
