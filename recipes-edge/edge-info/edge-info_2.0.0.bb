@@ -22,21 +22,17 @@ RDEPENDS:${PN} += "coreutils bash ncurses bc curl gawk findutils jq sed"
 RM_WORK_EXCLUDE += "${PN}"
 
 FILES:${PN} = "\
-${EDGE_BIN}/ \
-/etc/tmpfiles.d/userdata-infotool-tmpfiles.conf \
+${EDGE_BIN}/edge-info \
 "
 
 S = "${WORKDIR}/git"
 
 do_compile() {
-	cd ${S}/pe-utils/info-tool
-	edge_replace_vars info
+	cd ${S}/pe-utils/edge-info
+	edge_replace_vars edge-info
 }
 
 do_install() {
     install -d ${D}${EDGE_BIN}
-    install -m 0755 ${S}/pe-utils/info-tool/info ${D}/${EDGE_BIN}/
-    install -d "${D}/etc/tmpfiles.d"
-    echo "d /var/rootdirs/userdata 0755 root root -" >> "${D}/etc/tmpfiles.d/userdata-infotool-tmpfiles.conf"
-    echo "d ${EDGE_DATA}/info 0777 root root -" >> "${D}/etc/tmpfiles.d/userdata-infotool-tmpfiles.conf"
+    install -m 0755 ${S}/pe-utils/edge-info/edge-info ${D}/${EDGE_BIN}/
 }

@@ -33,7 +33,6 @@ FILES:${PN} = "\
     ${EDGE_BIN}/generate-identity.sh \
     ${EDGE_BIN}/developer_identity/create-dev-identity.sh \
     ${EDGE_BIN}/developer_identity/radioProfile.template.json \
-    ${EDGE_BIN}/developer_identity/common.sh \
     ${EDGE_BIN}/developer_identity/VERSION \
     ${systemd_system_unitdir}/wait-for-edge-identity.service \
 "
@@ -46,7 +45,6 @@ do_install() {
 	install -m 0755 ${S}/pe-utils/identity-tools/generate-identity.sh ${D}${EDGE_BIN}/
 	install -m 0755 ${S}/pe-utils/identity-tools/developer_identity/create-dev-identity.sh ${D}${EDGE_BIN}/developer_identity/
 	install -m 0755 ${S}/pe-utils/identity-tools/developer_identity/radioProfile.template.json ${D}${EDGE_BIN}/developer_identity/
-	install -m 0755 ${S}/pe-utils/identity-tools/developer_identity/common.sh ${D}${EDGE_BIN}/developer_identity/
 	install -m 0755 ${S}/pe-utils/identity-tools/developer_identity/VERSION ${D}${EDGE_BIN}/developer_identity/
 
 	# Install systemd units

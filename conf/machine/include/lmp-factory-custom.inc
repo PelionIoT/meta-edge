@@ -25,8 +25,8 @@ edge-examples \
 
 EDGE_SYSTEMS_MANAGEMENT = "\
 edge-proxy \
-info-tool \
-testnet \
+edge-info \
+edge-testnet \
 edge-terminal \
 fluentbit \
 maestro \
