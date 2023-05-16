@@ -14,7 +14,11 @@ jobs:
           ls -al build
           df -h .
       - name: Remove build -folder
-        run: rm -rf build
+        run: |
+          # Due golang module policy, all external golang modules are READ ONLY
+          # so those can't be deleted unless you force them to be writable.
+          chmod u+w -R build
+          rm -rf build
       - name: Done
         run: |
           df -h .
