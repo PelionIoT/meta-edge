@@ -39,6 +39,9 @@ do_compile() {
 	mkdir -p ${S}/src/github.com/containernetworking
 	ln -sfr ${S}/src/import ${S}/src/github.com/containernetworking/cni
 
+	# Try not to have any read-only files in the build area (they make cleanup difficult if build fails)
+	${GO} env -w GOFLAGS=-modcacherw
+
 	cd ${B}/src/github.com/containernetworking/cni/libcni
 	${GO} build
 

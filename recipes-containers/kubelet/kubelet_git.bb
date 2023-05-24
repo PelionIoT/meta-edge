@@ -45,6 +45,8 @@ GO_IMPORT = "k8s.io/kubernetes"
 GO_PACKAGES = "${GO_IMPORT}/cmd/kubelet"
 
 do_compile() {
+  # Try not to have any read-only files in the build area (they make cleanup difficult if build fails)
+  ${GO} env -w GOFLAGS=-modcacherw
   export TMPDIR="${GOTMPDIR}"
   # KUBE_GO_PACKAGE is expected to be set by the version.sh script
   export KUBE_GO_PACKAGE=${GO_IMPORT}
