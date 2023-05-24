@@ -47,6 +47,8 @@ FILES:${PN} += "\
     "
 do_compile[network] = "1"
 do_compile() {
+  # Try not to have any read-only files in the build area (they make cleanup difficult if build fails)
+  ${GO} env -w GOFLAGS=-modcacherw
   cd src/${GO_IMPORT}
   ${GO} build -o bin/maestro maestro/main.go
   #next 2 lines: workaround for permission error during yocto cleanup

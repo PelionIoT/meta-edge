@@ -43,6 +43,8 @@ FILES:${PN} =  " \
 do_configure[network] = "1"
 do_configure(){
   cd ../coredns-v1.8.3+gitAUTOINC+4293992bb8/src/github.com/coredns/coredns/
+  # Try not to have any read-only files in the build area (they make cleanup difficult if build fails)
+  ${GO} env -w GOFLAGS=-modcacherw
   GOARCH=${GOHOSTARCH} CGO_ENABLED=0 go generate 
   #next 2 lines: workaround for permission error during yocto cleanup
   cd ${B}
@@ -54,6 +56,8 @@ do_compile(){
   cd ../coredns-v1.8.3+gitAUTOINC+4293992bb8/src/github.com/coredns/coredns/
   GITCOMMIT="$(git describe --tags --dirty)"
   BUILDTIME="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+  # Try not to have any read-only files in the build area (they make cleanup difficult if build fails)
+  ${GO} env -w GOFLAGS=-modcacherw
   CGO_ENABLED=$(CGO_ENABLED) SYSTEM="GOOS=${GOOS} GOARCH=${GOARCH}" go build $(BUILDOPTS) -ldflags="-X github.com/coredns/coredns/coremain.GitCommit=${GITCOMMIT} -X github.com/coredns/coredns/coremain.gitShortStat=${BUILDTIME}" -o coredns
   #next 2 lines: workaround for permission error during yocto cleanup
   cd ${B}

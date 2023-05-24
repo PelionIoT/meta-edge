@@ -50,6 +50,8 @@ do_compile() {
   export TMPDIR="${GOTMPDIR}"
   GIT_COMMIT="$(git describe --tags --dirty)"
   timestamp="$(date ${buildDate} -u +'%Y-%m-%dT%H:%M:%SZ')"
+  # Try not to have any read-only files in the build area (they make cleanup difficult if build fails)
+  ${GO} env -w GOFLAGS=-modcacherw
   ${GO} build -ldflags "-X github.com/cloudnativelabs/kube-router/pkg/version.Version=${GIT_COMMIT} -X github.com/cloudnativelabs/kube-router/pkg/version.BuildDate=${timestamp}" -o kube-router cmd/kube-router/kube-router.go
   #next 2 lines: workaround for permission error during yocto cleanup
   cd ${B}
