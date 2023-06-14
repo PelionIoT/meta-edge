@@ -139,6 +139,37 @@ jobs:
         with:
           name: WIC-BYOC-${{ inputs.target }}
           path: |
+              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.bmap
+              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.gz
+              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}/image_license.manifest
+          if-no-files-found: error
+      - name: Build-Factory ${{ inputs.target }}
+        run: |
+          cd build
+          cd .repo/manifests/
+          # Reset local.conf back to default
+          git checkout conf/local.conf
+          cd ../..
+          # Inject Factory config
+          export LOCALCONF=".repo/manifests/conf/local.conf"
+          echo -e "\n" >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FACTORY_MODE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_BYOC_MODE = "OFF"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "OFF"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> "$LOCALCONF"
+          # Put in the right place the factory config (build-lmp -folder)
+          cp "$LOCALCONF" build-lmp/conf/local.conf
+          MACHINE=${{ inputs.target }} source setup-environment
+          tail -n 6 conf/local.conf
+          time bitbake ${{ inputs.image-type }}
+          # Move the image_license.manifest to image folder so that we can archive in 1 step
+          mv deploy/licenses/${{ inputs.image-type }}-${{ inputs.target }}/*.manifest deploy/images/${{ inputs.target }}/
+      - name: Archive the Factory WIC-file & license manifest for ${{ inputs.target }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: WIC-Factory-${{ inputs.target }}
+          path: |
              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.bmap
              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.gz
              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}/image_license.manifest
