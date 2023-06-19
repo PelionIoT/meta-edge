@@ -70,7 +70,7 @@ jobs:
           virtualenv ~/repo-venv
           source ~/repo-venv/bin/activate
           repo --version
-          repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b ${{ inputs.branch-manifest }}
+          repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/heads/${{ inputs.branch-manifest }} || repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/tags/${{ inputs.branch-manifest }}
           repo sync -j"$(nproc)"
           cd layers/meta-edge
           git fetch --all
