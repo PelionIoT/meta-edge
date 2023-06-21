@@ -33,7 +33,7 @@ PV="${SRCREV:pn-mbed-fcce}+git${SRCPV}"
 SRCREV:parsec = "0.6.0"
 
 S = "${WORKDIR}/git"
-FILES:${PN} = "${EDGE_BIN}/factory-configurator-client-armcompiled.elf"
+FILES:${PN} = "${EDGE_BIN}/factory-configurator-client-example"
 
 lcl_maybe_fortify = '-D_FORTIFY_SOURCE=0'
 
@@ -90,5 +90,5 @@ do_compile() {
 do_install() {
 
     install -d ${D}${EDGE_BIN}
-    install -m 755 ${S}/__Yocto_Generic_YoctoLinux_mbedtls/Debug/factory-configurator-client-example.elf ${D}${EDGE_BIN}/factory-configurator-client-armcompiled.elf
+    install -m 755 ${S}/__Yocto_Generic_YoctoLinux_mbedtls/Debug/factory-configurator-client-example.elf ${D}${EDGE_BIN}/factory-configurator-client-example
 }
