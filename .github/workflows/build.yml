@@ -42,18 +42,18 @@ jobs:
   build-lmp:
     runs-on: [self-hosted, edge-builder]
     steps:
-      - name: Greetings
+      - name: Build info
         run: | 
-          echo "Greetings, build LmP for target is ${{ inputs.target }}" 
+          echo "Greetings $USER, build LmP for target is ${{ inputs.target }}"
           echo " with manifest branch: ${{ inputs.branch-manifest }}"
           echo " with meta-edge branch: ${{ inputs.branch-meta-edge }}"
           echo " ${{ inputs.image-type }} image."
+          WORKDIR=$(pwd)
+          echo "HOME=$HOME, workdir=$WORKDIR"
       - name: Install dependencies
         run: |
-          whoami
-          echo HOME=$HOME and USER=$USER
           # These have been pre-installed to ed-dev2 machine.
-          #sudo apt update; sudo apt upgrade -y
+          #sudo apt-get update; sudo apt-get upgrade -y
           #sudo apt-get install -y coreutils curl gawk wget git diffstat unzip
           #sudo apt-get install -y texinfo g++ gcc-multilib build-essential chrpath socat
           #sudo apt-get install -y cpio openjdk-11-jre python3 python3-pip python3-venv
@@ -70,23 +70,11 @@ jobs:
           virtualenv ~/repo-venv
           source ~/repo-venv/bin/activate
           repo --version
-          repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b ${{ inputs.branch-manifest }}
+          repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/heads/${{ inputs.branch-manifest }} || repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/tags/${{ inputs.branch-manifest }}
           repo sync -j"$(nproc)"
           cd layers/meta-edge
-          git fetch
+          git fetch --all
           git checkout ${{ inputs.branch-meta-edge }}
-      - name: Configure dev cert build
-        run: |
-          cd build
-          export LOCALCONF=".repo/manifests/conf/local.conf"
-          echo -e "\n" >> "$LOCALCONF"
-          echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "ON"' >> "$LOCALCONF"
-          echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> "$LOCALCONF"
-          echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> "$LOCALCONF"
-          #echo 'SSTATE_DIR = "/home/ubuntu/Projects/CACHE/SSTATE_CACHE"' >> "$LOCALCONF"
-          #echo 'DL_DIR = "/home/ubuntu/Projects/CACHE/DL_DIR"' >> "$LOCALCONF"
-          # Please note that this local.conf gets copied over to the build-lmp/conf -folder after
-          # MACHINE=<mach> source setup-environment -step
       - name: Get dev credentials
         env:
           MBED_CLOUD_DEV_CREDENTIALS: ${{ secrets.META_EDGE_DEVELOPER_CERTIFICATE }}
@@ -98,9 +86,20 @@ jobs:
           echo "$UPDATE_DEFAULT_RESOURCES" >build/layers/meta-edge/recipes-edge/edge-core/files/update_default_resources.c
       - name: Build-dev ${{ inputs.target }}
         run: |
+          pwd
           cd build
-          MACHINE=${{ inputs.target }} source setup-environment 
-          tail -n 6 conf/local.conf
+          MACHINE=${{ inputs.target }} source setup-environment
+          export LOCALCONF="conf/local.conf"
+          # Copy over clean local.conf
+          cp ../.repo/manifests/conf/local.conf "$LOCALCONF"
+          echo -e "\n" >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FACTORY_MODE = "OFF"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> "$LOCALCONF"
+          #echo 'SSTATE_DIR = "/home/ubuntu/Projects/CACHE/SSTATE_CACHE"' >> "$LOCALCONF"
+          #echo 'DL_DIR = "/home/ubuntu/Projects/CACHE/DL_DIR"' >> "$LOCALCONF"
+          tail -n 14 "$LOCALCONF"
           time bitbake ${{ inputs.image-type }}
           # Move the image_license.manifest to image folder so that we can archive in 1 step
           mv deploy/licenses/${{ inputs.image-type }}-${{ inputs.target }}/*.manifest deploy/images/${{ inputs.target }}/
@@ -116,21 +115,20 @@ jobs:
       - name: Build-BYOC ${{ inputs.target }}
         run: |
           cd build
-          cd .repo/manifests/
-          # Reset local.conf back to default
-          git checkout conf/local.conf
-          cd ../..
+          # Delete the dev cert files
+          rm layers/meta-edge/recipes-edge/edge-core/files/mbed_cloud_dev_credentials.c
+          rm layers/meta-edge/recipes-edge/edge-core/files/update_default_resources.c
+          MACHINE=${{ inputs.target }} source setup-environment
+          export LOCALCONF="conf/local.conf"
+          cp ../.repo/manifests/conf/local.conf "$LOCALCONF"
           # Inject BYOC config
-          export LOCALCONF=".repo/manifests/conf/local.conf"
           echo -e "\n" >> "$LOCALCONF"
           echo 'MBED_EDGE_CORE_CONFIG_BYOC_MODE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FACTORY_MODE = "OFF"' >> "$LOCALCONF"
           echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "OFF"' >> "$LOCALCONF"
           echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> "$LOCALCONF"
           echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> "$LOCALCONF"
-          # Put in the right place the BYOC config (build-lmp -folder)
-          cp "$LOCALCONF" build-lmp/conf/local.conf
-          MACHINE=${{ inputs.target }} source setup-environment
-          tail -n 6 conf/local.conf
+          tail -n 14 "$LOCALCONF"
           time bitbake ${{ inputs.image-type }}
           # Move the image_license.manifest to image folder so that we can archive in 1 step
           mv deploy/licenses/${{ inputs.image-type }}-${{ inputs.target }}/*.manifest deploy/images/${{ inputs.target }}/
@@ -138,6 +136,33 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: WIC-BYOC-${{ inputs.target }}
+          path: |
+              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.bmap
+              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.gz
+              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}/image_license.manifest
+          if-no-files-found: error
+      - name: Build-Factory ${{ inputs.target }}
+        run: |
+          cd build
+          MACHINE=${{ inputs.target }} source setup-environment
+          # Inject Factory config
+          export LOCALCONF="conf/local.conf"
+          # Copy over clean local.conf
+          cp ../.repo/manifests/conf/local.conf "$LOCALCONF"
+          echo -e "\n" >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FACTORY_MODE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_BYOC_MODE = "OFF"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "OFF"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> "$LOCALCONF"
+          echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> "$LOCALCONF"
+          tail -n 14 "$LOCALCONF"
+          time bitbake ${{ inputs.image-type }}
+          # Move the image_license.manifest to image folder so that we can archive in 1 step
+          mv deploy/licenses/${{ inputs.image-type }}-${{ inputs.target }}/*.manifest deploy/images/${{ inputs.target }}/
+      - name: Archive the Factory WIC-file & license manifest for ${{ inputs.target }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: WIC-Factory-${{ inputs.target }}
           path: |
              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.bmap
              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.gz
