@@ -168,3 +168,32 @@ jobs:
              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.gz
              build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}/image_license.manifest
           if-no-files-found: error
+      - name: Build-PARSEC-Factory ${{ inputs.target }}
+        run: |
+            cd build
+            MACHINE=${{ inputs.target }} source setup-environment
+            # Inject Factory config
+            export LOCALCONF="conf/local.conf"
+            # Copy over clean local.conf
+            cp ../.repo/manifests/conf/local.conf "$LOCALCONF"
+            echo -e "\n" >> "$LOCALCONF"
+            echo 'MBED_EDGE_CORE_CONFIG_FACTORY_MODE = "ON"' >> "$LOCALCONF"
+            echo 'MBED_EDGE_CORE_CONFIG_BYOC_MODE = "OFF"' >> "$LOCALCONF"
+            echo 'MBED_EDGE_CORE_CONFIG_DEVELOPER_MODE = "OFF"' >> "$LOCALCONF"
+            echo 'MBED_EDGE_CORE_CONFIG_FIRMWARE_UPDATE = "ON"' >> "$LOCALCONF"
+            echo 'MBED_EDGE_CORE_CONFIG_FOTA_ENABLE = "ON"' >> "$LOCALCONF"
+            echo 'MBED_EDGE_CORE_CONFIG_PARSEC_TPM_SE_SUPPORT = "ON"' >> "$LOCALCONF"
+            tail -n 14 "$LOCALCONF"
+            time bitbake ${{ inputs.image-type }}
+            # Move the image_license.manifest to image folder so that we can archive in 1 step
+            mv deploy/licenses/${{ inputs.image-type }}-${{ inputs.target }}/*.manifest deploy/images/${{ inputs.target }}/
+      - name: Archive the PARSEC Factory WIC-file & license manifest for ${{ inputs.target }}
+        uses: actions/upload-artifact@v3
+        with:
+            name: WIC-PARSEC-Factory-${{ inputs.target }}
+            path: |
+               build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.bmap
+               build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}.wic.gz
+               build/build-lmp/deploy/images/${{ inputs.target }}/${{ inputs.image-type }}-${{ inputs.target }}/image_license.manifest
+            if-no-files-found: error
+  
