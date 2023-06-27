@@ -1,0 +1,16 @@
+name: rm-meta-edge
+
+on:
+  - workflow_dispatch
+
+jobs:
+  wipe-build-folder:
+    runs-on: [self-hosted, edge-builder]
+    steps:
+      - name: Greetings
+        run: |
+          echo "Hi, will reset hard the meta-edge repo and forcefully clean."
+          pwd
+          cd build/layers/meta-edge
+          git reset --hard origin/main
+          git clean -f
