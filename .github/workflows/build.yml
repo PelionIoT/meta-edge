@@ -70,8 +70,16 @@ jobs:
           virtualenv ~/repo-venv
           source ~/repo-venv/bin/activate
           repo --version
-          repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/heads/${{ inputs.branch-manifest }} || repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/tags/${{ inputs.branch-manifest }}
-          repo sync -j"$(nproc)"
+          # Is it a version string vN.N.N or vN.N.N-RCN
+          if [[ ${{ inputs.branch-manifest }} =~ ^v[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}.*$ ]];
+          then
+            echo "${{ inputs.branch-manifest }} is a tag, using refs/tags/${{ inputs.branch-manifest }}"
+            repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/tags/${{ inputs.branch-manifest }}
+          else
+            echo "${{ inputs.branch-manifest }} is a branch, using refs/heads/${{ inputs.branch-manifest }}"
+            repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/heads/${{ inputs.branch-manifest }}
+          fi
+          repo sync -j"$(nproc)" --force-sync meta-edge
           cd layers/meta-edge
           git fetch --all
           git checkout ${{ inputs.branch-meta-edge }}
