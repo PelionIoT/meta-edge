@@ -4,4 +4,6 @@
    - [journald] Enabled Forward Secure Sealing (FSS) feature of systemd journal.
    - To configure Izuma Edge gateway with a sealing key and to keep track of the verification key in production setup, use Pelion Edge Provisioner (PEP) tool [v2.6.0](https://github.com/PelionIoT/pelion-edge-provisioner/releases/tag/v2.6.0).
    - By default, the gateway is configured **with** persistent journal logging for LMP. To disable persistent logging, set flag `VOLATILE_LOG_DIR = "yes"` in `local.conf`, and update the `Storage` in recipes-core/systemd/systemd-conf/journald.conf. Note: If you disable persistent logging, the FSS feature won't work.
-
+- Update pe-utils to version 2.3.0.
+   - edge-info has now printout for internal-id.
+   - edge-testnet now also tests connection to Edge container registry.
