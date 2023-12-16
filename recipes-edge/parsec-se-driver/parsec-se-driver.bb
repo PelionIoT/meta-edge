@@ -18,13 +18,14 @@ S_MBEDTLS = "${WORKDIR}/mbedtls"
 
 TOOLCHAIN = "clang"
 
+do_configure[postfuncs] = "0"
 do_compile:prepend() {
     export MBEDTLS_INCLUDE_DIR="${S_MBEDTLS}/include"
 }
 
 do_install() {
     install -d "${D}/${libdir}"
-    install -m 755 "${B}/target/${TARGET_SYS}/release/libparsec_se_driver.a" "${D}/${libdir}"
+    install -m 755 "${B}/target/${CARGO_TARGET_SUBDIR}/libparsec_se_driver.a" "${D}/${libdir}"
 }
 
 include parsec-se-driver.inc

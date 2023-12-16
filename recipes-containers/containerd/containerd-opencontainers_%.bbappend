@@ -6,7 +6,7 @@ FILES:${PN} += "${sysconfdir}/containerd/config.toml"
 inherit edge
 
 do_compile:append () {
-     edge_replace_vars ../../../config.toml
+     edge_replace_vars ${WORKDIR}/config.toml
 }
 
 do_install:append () {
