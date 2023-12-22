@@ -29,7 +29,7 @@ edge-info \
 edge-testnet \
 edge-terminal \
 fluentbit \
-maestro \
+edge-resource-manager \
 "
 
 EDGE_CONTAINER_ORCHESTRATION = " \
