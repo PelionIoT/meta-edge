@@ -54,3 +54,6 @@ ${EDGE_BASE_OPTIONAL} \
 ${PARSEC_SERVICE} \
 "
 
+CORE_IMAGE_BASE_INSTALL:append:rpi = " \
+rpi-identify \
+"
