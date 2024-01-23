@@ -21,19 +21,19 @@ fi
 
 
 # Assign the LED pins to GPIO
-echo gpio | tee $GREEN_LED/trigger
-echo gpio | tee $RED_LED/trigger
+echo gpio > $GREEN_LED/trigger
+echo gpio > $RED_LED/trigger
 
 # Turn both LEDs off.
-echo 0    | tee $GREEN_LED/brightness
-echo 0    | tee $RED_LED/brightness
+echo 0    > $GREEN_LED/brightness
+echo 0    > $RED_LED/brightness
 
 while true; do
 
     # Deal with GREEN.
     if [ "$green_off" = true ]; then
         if [ "$green_seconds" -gt 0 ]; then
-            echo 0 | tee $GREEN_LED/brightness
+            echo 0 > $GREEN_LED/brightness
             green_seconds=$((green_seconds - 1))
         fi
         if [ "$green_seconds" = 0 ]; then
@@ -42,7 +42,7 @@ while true; do
         fi
     else
         if [ "$green_seconds" -gt 0 ]; then
-            echo 1 | tee $GREEN_LED/brightness
+            echo 1 > $GREEN_LED/brightness
             green_seconds=$((green_seconds - 1))
         fi
         if [ "$green_seconds" = 0 ]; then
@@ -54,7 +54,7 @@ while true; do
     # Deal with RED.
     if [ "$red_off" = true ]; then
         if [ "$red_seconds" -gt 0 ]; then
-            echo 0 | tee $RED_LED/brightness
+            echo 0 > $RED_LED/brightness
             red_seconds=$((red_seconds -1))
         fi
         if [ "$red_seconds" = 0 ]; then
@@ -63,7 +63,7 @@ while true; do
         fi
     else
         if [ "$red_seconds" -gt 0 ]; then
-            echo 1 | tee $RED_LED/brightness 
+            echo 1 > $RED_LED/brightness 
             red_seconds=$((red_seconds -1))
         fi
         if [ "$red_seconds" = 0 ]; then
