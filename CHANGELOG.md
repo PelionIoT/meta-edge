@@ -1,3 +1,9 @@
+# Izuma Edge 2.x.x - 2024
+
+- Base LmP release updated to v91.
+- Update `pe-utils` to version 2.3.3.
+    - `edge-testnet` is now detecting issues more accurately.
+
 # Izuma Edge 2.6.1 - 3rd Oct 2023
 
 - [Verified logging](https://developer.izumanetworks.com/docs/device-management-edge/2.6/managing/verified-logging.html) - allows you to sign the logs in the device to prevent log manipulation.
