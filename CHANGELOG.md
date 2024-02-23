@@ -1,7 +1,7 @@
 # Izuma Edge 2.x.x - 2024
 
 - Base LmP release updated to v91.
-- Update `pe-utils` to version 2.3.3.
+- Update `pe-utils` to version 2.3.4.
     - `edge-testnet` is now detecting issues more accurately.
 
 # Izuma Edge 2.6.1 - 3rd Oct 2023
