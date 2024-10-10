@@ -2,6 +2,9 @@
 # Use sdcard as root device by default
 OSTREE_KERNEL_ARGS:imx8mm-lpddr4-evk = "console=tty1 console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 root=/dev/mmcblk1p2 rootfstype=ext4"
 
+# Enable legacy cgroups because our version of kubelet needs them
+OSTREE_KERNEL_ARGS:append = " systemd.unified_cgroup_hierarchy=0"
+
 # Add edge
 
 PREFERRED_RPROVIDER_kubelet = "kubelet"
@@ -29,7 +32,7 @@ edge-info \
 edge-testnet \
 edge-terminal \
 fluentbit \
-maestro \
+edge-resource-manager \
 "
 
 EDGE_CONTAINER_ORCHESTRATION = " \
