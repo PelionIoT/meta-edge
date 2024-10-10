@@ -3,6 +3,8 @@
 - Base LmP release updated to v91.
 - Update `pe-utils` to version 2.3.7.
     - `edge-testnet` is now detecting issues more accurately & more robustly.
+- Update `edge-proxy` to latest version (v.1.4.0).
+- UPdate `pe-terminal` to latest version (v1.2.0).
 
 # Izuma Edge 2.6.1 - 3rd Oct 2023
 
