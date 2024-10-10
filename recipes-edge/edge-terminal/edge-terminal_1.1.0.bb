@@ -22,7 +22,7 @@ file://config.json \
 
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-SRCREV = "v1.1.0"
+SRCREV = "v1.2.0"
 PV = "${SRCREV}+git${SRCPV}"
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = "${RT_SERVICE_FILE} \
