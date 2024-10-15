@@ -80,6 +80,8 @@ jobs:
             repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/heads/${{ inputs.branch-manifest }}
           fi
           repo sync -j"$(nproc)" --force-sync meta-edge
+          echo "repo info" >>$GITHUB_STEP_SUMMARY
+          repo info >>$GITHUB_STEP_SUMMARY
           cd layers/meta-edge
           git fetch --all
           git checkout ${{ inputs.branch-meta-edge }}
