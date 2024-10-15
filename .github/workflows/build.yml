@@ -79,7 +79,7 @@ jobs:
             echo "${{ inputs.branch-manifest }} is a branch, using refs/heads/${{ inputs.branch-manifest }}"
             repo init -u https://github.com/PelionIoT/manifest-edge.git -m edge.xml -b refs/heads/${{ inputs.branch-manifest }}
           fi
-          repo sync -j"$(nproc)" --force-sync meta-edge
+          repo sync -j"$(nproc)"
           echo "repo info" >>$GITHUB_STEP_SUMMARY
           repo info >>$GITHUB_STEP_SUMMARY
           cd layers/meta-edge
