@@ -28,7 +28,7 @@ file://edge-resource-manager-config.yaml \
 INSANE_SKIP_${PN} = "textrel"
 
 SRCREV = "v1.0.0"
-PV = "${SRCPV}"
+PV = "${SRCREV}"
 
 
 SYSTEMD_PACKAGES = "${PN}"
