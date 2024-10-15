@@ -1,5 +1,5 @@
 [Unit]
-Description=Maestro: Network, Config, DeviceJS manager
+Description=edge-resource-manager: Config manager
 Wants=edge-proxy.service
 After=edge-proxy.service
 
@@ -8,7 +8,7 @@ Restart=always
 RestartSec=5s
 ExecCondition=sh -c '[ -f EDGE_DATA/edge_gw_config/identity.json ]'
 ExecStartPre=mkdir -p EDGE_DATA/etc/
-ExecStart=env GODEBUG=madvdontneed=1 EDGE_BIN/maestro -config EDGE_CONFIG/maestro-config.yaml
+ExecStart=env GODEBUG=madvdontneed=1 EDGE_BIN/edge-resource-manager -config EDGE_CONFIG/edge-resource-manager-config.yaml
 
 [Install]
 RequiredBy=multi-user.target
